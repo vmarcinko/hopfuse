@@ -1,0 +1,45 @@
+(ns hopfuse.support
+  (:require
+   [hoplon.twitter.bootstrap :refer [container control-label form-group form-horizontal]]))
+
+(defc inspector-shown? false)
+
+(defelem cell-inspector [attr kids]
+         (div :class "panel panel-default"
+              (div :class "panel-body"
+                   (button :type "button" :class "btn btn-default btn-xs"
+                           :click #(swap! inspector-shown? not)
+                           (span :class (cell= {"glyphicon" true
+                                                "glyphicon-chevron-up" inspector-shown?
+                                                "glyphicon-chevron-down" (not inspector-shown?)})))
+                   (ul :toggle inspector-shown?
+                       (map li kids)))))
+
+(defelem close-button [attr kids]
+         ((button :type "button" :class "close" :data-dismiss "alert"
+                  (span :aria-hidden "true" "x")
+                  (span :class "sr-only" "Close")) attr))
+
+(def ^:private alert-class-default {:alert         true
+                                    :alert-info    false
+                                    :alert-success false
+                                    :alert-warning false
+                                    :alert-danger  false})
+
+(defelem alert [{:keys [type] :as attr} kids]
+         (let [style-cell (cell= (str "alert-" (name (or type :success))))
+               class-cell (cell= (assoc alert-class-default style-cell true))]
+           ((div :role "alert" :class class-cell)
+            (dissoc attr :type)
+            kids)))
+
+(defelem dismissible-alert [{:keys [type message close-cell] :as attr} _]
+         ((alert :toggle (cell= (not (nil? type)))
+                 :type type
+                 (text "~{message}")
+                 (close-button :click #(reset! close-cell nil)))
+          (dissoc attr :type :message :close-cell)))
+
+(defn assoc-handler [cell key]
+      (fn [event]
+          (swap! cell assoc key @event)))

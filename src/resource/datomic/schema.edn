@@ -1,0 +1,75 @@
+[
+  [
+    {:db/id                 #db/id[:db.part/db],
+     :db/ident              :mypartition,
+     :db.install/_partition :db.part/db}
+    ]
+  [
+    {:db/id                 #db/id[:db.part/db]
+     :db/ident              :user/creation-time
+     :db/valueType          :db.type/instant
+     :db/cardinality        :db.cardinality/one
+     :db/doc                "Creation time"
+     :db.install/_attribute :db.part/db}
+
+    {:db/id                 #db/id[:db.part/db]
+     :db/ident              :user/username
+     :db/valueType          :db.type/string
+     :db/cardinality        :db.cardinality/one
+     :db/unique             :db.unique/identity
+     :db/doc                "An user's username"
+     :db.install/_attribute :db.part/db}
+
+    {:db/id                 #db/id[:db.part/db]
+     :db/ident              :user/password
+     :db/valueType          :db.type/string
+     :db/cardinality        :db.cardinality/one
+     :db/doc                "An user's password"
+     :db.install/_attribute :db.part/db}
+
+    {:db/id                 #db/id[:db.part/db]
+     :db/ident              :user/name
+     :db/valueType          :db.type/string
+     :db/cardinality        :db.cardinality/one
+     :db/doc                "An user's name"
+     :db.install/_attribute :db.part/db}
+
+    {:db/id                 #db/id[:db.part/db]
+     :db/ident              :user/last-name
+     :db/valueType          :db.type/string
+     :db/cardinality        :db.cardinality/one
+     :db/doc                "An user's last name"
+     :db.install/_attribute :db.part/db}
+
+    {:db/id                 #db/id[:db.part/db]
+     :db/ident              :user/role
+     :db/valueType          :db.type/ref
+     :db/cardinality        :db.cardinality/one
+     :db/doc                "User's role"
+     :db.install/_attribute :db.part/db}
+
+    {:db/id    #db/id[:mypartition]
+     :db/ident :role/admin}
+
+    {:db/id    #db/id[:mypartition]
+     :db/ident :role/company}
+    ]
+  [
+    {:db/id              #db/id[:mypartition]
+     :user/creation-time #inst "2013-06-08T01:00:00Z"
+     :user/username      "pero"
+     :user/password      "pero"
+     :user/name          "Pero"
+     :user/last-name     "Perić"
+     :user/role          :role/admin
+     }
+    {:db/id              #db/id[:mypartition]
+     :user/creation-time #inst "2013-06-09T01:00:00Z"
+     :user/username      "john"
+     :user/password      "doe"
+     :user/name          "John"
+     :user/last-name     "Doe"
+     :user/role          :role/company
+     }
+    ]
+  ]
