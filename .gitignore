@@ -1,2 +1,6 @@
 /.boot/
 /resources/public/
+.idea
+*.iml
+*.clj
+

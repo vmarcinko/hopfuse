@@ -103,7 +103,10 @@
                                                                   (name role))
                                                                 (when (= :company (:role user))
                                                                   " (some company)"))))
-                                                 (td "Some actions")
+                                                 (td
+                                                   (a :href "javascript:void(0)"
+                                                      :click #(rpc/remove-user! (:username @user))
+                                                      "Delete"))
                                                  ))))
                             )
                        (tab :name "Companies"

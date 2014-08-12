@@ -12,8 +12,6 @@
   :out-path     "resources/public"
   :src-paths    #{"src/hl" "src/cljs" "src/clj", "src/resource"})
 
-(#'clojure.core/load-data-readers)
-
 ;; Static resources (css, images, etc.):
 (add-sync! (get-env :out-path) #{"assets"})
 
