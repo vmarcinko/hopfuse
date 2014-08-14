@@ -1,6 +1,6 @@
 (ns hopfuse.support
   (:require
-   [hoplon.twitter.bootstrap :refer [container control-label form-group form-horizontal]]))
+   [hopfuse.bootstrap-support :refer [container control-label form-group form-horizontal]]))
 
 (defc inspector-shown? false)
 
@@ -16,8 +16,8 @@
                        (map li kids)))))
 
 (defelem close-button [attr kids]
-         ((button :type "button" :class "close" :data-dismiss "alert"
-                  (span :aria-hidden "true" "x")
+         ((button :type "button" :class "close"
+                  (span "x")
                   (span :class "sr-only" "Close")) attr))
 
 (def ^:private alert-class-default {:alert         true
@@ -43,3 +43,24 @@
 (defn assoc-handler [cell key]
       (fn [event]
           (swap! cell assoc key @event)))
+
+
+(defmethod do! :toggle-modal
+  [elem _ v]
+  (.modal (js/jQuery elem) (if v "show" "hide")))
+
+(defelem modal [attr kids]
+         (with-let [elem ((div :class "modal"
+                               (div :class "modal-dialog"
+                                    ((div :class "modal-content") kids))) attr)]
+                   (with-init!
+                     (.modal (js/jQuery elem) (clj->js {:show false :backdrop "static"})))))
+
+(defelem modal-header [attr kids]
+         ((div :class "modal-header") attr kids))
+
+(defelem modal-body [attr kids]
+         ((div :class "modal-body") attr kids))
+
+(defelem modal-footer [attr kids]
+         ((div :class "modal-footer") attr kids))

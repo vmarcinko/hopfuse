@@ -1,7 +1,7 @@
 (page "index.html"
       (:require
        [tailrecursion.hoplon.reload :refer [reload-all]]
-       [hoplon.twitter.bootstrap :refer [container control-label form-group form-horizontal tabs tab]]
+       [hopfuse.bootstrap-support :refer [container control-label form-group form-horizontal tabs tab]]
        [hopfuse.rpc :as rpc]
        [hopfuse.support :as support]))
 
@@ -15,16 +15,29 @@
 
 (defc login-data {})
 
+(defc edit-user-id nil)
+
 (html
   (head
-    ;(link :href "css/bootstrap.css" :rel "stylesheet" :type "text/css")
-    ;(script :src "js/bootstrap.min.js" :type "text/javascript" :language "javascript")
-    )
+    (link :href "css/bootstrap.min.css" :rel "stylesheet" :type "text/css")
+    (link :href "css/bootstrap-theme.min.css" :rel "stylesheet" :type "text/css"))
   (body
 
     (container
 
+      (support/modal :toggle-modal edit-user-id
+        (support/modal-header
+          (support/close-button :click #(reset! edit-user-id nil))
+          "Some Modal Title ...")
+        (support/modal-body
+          "Yahooo...")
+        (support/modal-footer
+          (button :type "button" :class "btn btn-default" :click #(reset! edit-user-id nil) "Close")
+          (button :type "button" :class "btn btn-default" "Save")))
+
       (support/cell-inspector
+        (text "Edit user enabled: ~{edit-user-id}")
+        (text "Login data: ~{login-data}")
         (text "State cell: ~{rpc/state}")
         (text "Error cell: ~{(pr-str rpc/error)}")
         (text "Loading cell: ~{rpc/loading}"))
@@ -91,8 +104,7 @@
                                        (th "Username")
                                        (th "Name")
                                        (th "Last Name")
-                                       (th "Role")
-                                       ))
+                                       (th "Role")))
                                    (tbody
                                      (loop-tpl :bindings [user (cell= (:users rpc/state))]
                                                (tr
@@ -105,13 +117,12 @@
                                                                   " (some company)"))))
                                                  (td
                                                    (a :href "javascript:void(0)"
-                                                      :click #(rpc/remove-user! (:username @user))
-                                                      "Delete"))
-                                                 ))))
-                            )
+                                                      :click #(reset! edit-user-id (:id @user))
+                                                      "Edit"))
+                                                 (td
+                                                   (a :href "javascript:void(0)"
+                                                      :click #(rpc/remove-user! (:id @user))
+                                                      "Delete")))))))
+
                        (tab :name "Companies"
-                            (h4 "Companies")))
-
-                     )))
-
-      )))
+                            (h4 "Companies")))))))))

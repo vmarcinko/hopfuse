@@ -24,6 +24,6 @@
                (store-logged-user-in-session! nil)
                (get-state))
 
-(castra/defrpc remove-user! [username]
-               (users/remove-user! username)
+(castra/defrpc remove-user! [id]
+               (users/remove-user! id)
                (get-state))

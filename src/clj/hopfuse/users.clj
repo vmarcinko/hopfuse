@@ -14,8 +14,8 @@
 (defn- prepare-user-entity [m]
   (dbsupport/rename-selected-keys m user-key-replacements))
 
-(defn remove-user! [username]
-  @(d/transact dbsupport/conn [[:db.fn/retractEntity [:user/username username]]]))
+(defn remove-user! [id]
+  @(d/transact dbsupport/conn [[:db.fn/retractEntity id]]))
 
 (defn find-by-username [username]
   (prepare-user-entity (d/entity (dbsupport/get-last-db) [:user/username username])))
