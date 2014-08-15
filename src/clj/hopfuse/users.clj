@@ -17,6 +17,12 @@
 (defn remove-user! [id]
   @(d/transact dbsupport/conn [[:db.fn/retractEntity id]]))
 
+(defn update-user! [user]
+  @(d/transact dbsupport/conn [{:db/id              (:id user)
+                                :user/name          (:name user)
+                                :user/last-name     (:last-name user)
+                                :user/role          (:role user)}]))
+
 (defn find-by-username [username]
   (prepare-user-entity (d/entity (dbsupport/get-last-db) [:user/username username])))
 

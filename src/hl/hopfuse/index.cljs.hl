@@ -15,7 +15,15 @@
 
 (defc login-data {})
 
-(defc edit-user-id nil)
+(defc update-user nil)
+
+(defc info-message nil)
+
+(defn show-info [& message]
+  (reset! info-message (apply str message))
+  (with-timeout
+    2000
+    (reset! info-message nil)))
 
 (html
   (head
@@ -25,22 +33,36 @@
 
     (container
 
-      (support/modal :toggle-modal edit-user-id
-        (support/modal-header
-          (support/close-button :click #(reset! edit-user-id nil))
-          "Some Modal Title ...")
-        (support/modal-body
-          "Yahooo...")
-        (support/modal-footer
-          (button :type "button" :class "btn btn-default" :click #(reset! edit-user-id nil) "Close")
-          (button :type "button" :class "btn btn-default" "Save")))
-
       (support/cell-inspector
-        (text "Edit user enabled: ~{edit-user-id}")
+        (text "Update user: ~{update-user}")
         (text "Login data: ~{login-data}")
         (text "State cell: ~{rpc/state}")
         (text "Error cell: ~{(pr-str rpc/error)}")
         (text "Loading cell: ~{rpc/loading}"))
+
+      (support/modal :toggle-modal update-user
+        (support/modal-header
+          (support/close-button :click #(reset! update-user nil))
+          "Updating user ...")
+        (support/modal-body
+          (form-horizontal
+            ;:submit #(rpc/update-user! @update-user)
+            (form-group
+              (control-label :col {:sm 2} :for "inputName" "Name")
+              (div :col {:sm 5}
+                   (input :type "text" :class "form-control" :id "inputName" :placeholder "Type here" :value (cell= (:name update-user)))))
+            (form-group
+              (control-label :col {:sm 2} :for "inputLastName" "Last Name")
+              (div :col {:sm 5}
+                   (input :type "text" :class "form-control" :id "inputLastName" :placeholder "Type here" :value (cell= (:last-name update-user)))))
+            ))
+        (support/modal-footer
+          (button :type "button" :class "btn btn-default" :click #(reset! update-user nil) "Close")
+          (button :type "button" :class "btn btn-default" :click #(rpc/update-user! @update-user) "Submit")))
+
+      (support/alert :type :info
+                     :toggle info-message
+        (text "~{info-message}"))
 
       (div :class "modal-dialog" :toggle rpc/loading-in-process?
            (div :class "modal-content"
@@ -117,11 +139,12 @@
                                                                   " (some company)"))))
                                                  (td
                                                    (a :href "javascript:void(0)"
-                                                      :click #(reset! edit-user-id (:id @user))
-                                                      "Edit"))
+                                                      :click #(reset! update-user @user)
+                                                      "Update"))
                                                  (td
                                                    (a :href "javascript:void(0)"
-                                                      :click #(rpc/remove-user! (:id @user))
+                                                      :click #((rpc/remove-user! (:id @user))
+                                                               (show-info "User '" (:username @user) "' removed!"))
                                                       "Delete")))))))
 
                        (tab :name "Companies"

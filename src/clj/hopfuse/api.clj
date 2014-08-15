@@ -27,3 +27,7 @@
 (castra/defrpc remove-user! [id]
                (users/remove-user! id)
                (get-state))
+
+(castra/defrpc update-user! [user]
+               (users/update-user! user)
+               (get-state))
