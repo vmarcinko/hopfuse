@@ -6,7 +6,7 @@
   :project      'hopfuse
   :version      "0.1.0-SNAPSHOT"
   :dependencies '[[tailrecursion/boot.task "2.2.4"]
-                  [tailrecursion/hoplon "5.10.21"]
+                  [tailrecursion/hoplon "5.10.22"]
                   [com.datomic/datomic-free "0.9.4815.12"]]
   :out-path     "resources/public"
   :src-paths    #{"src/hl" "src/cljs" "src/clj", "src/resource"})
@@ -21,7 +21,7 @@
 (deftask development
   "Build hopfuse for development."
   []
-  (comp (my/nrepl {:port 33133}) (watch) (hoplon {:prerender false}) (c/castra-dev-server 'hopfuse.api)))
+  (comp (my/nrepl {:port 33133}) (watch) (hoplon {:prerender false}) (c/castra-dev-server '[hopfuse.api hopfuse.users])))
 
 (deftask production
   "Build hopfuse for production."

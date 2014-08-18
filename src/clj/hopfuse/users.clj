@@ -1,36 +1,18 @@
 (ns hopfuse.users
   (:require [tailrecursion.castra :as castra]
-            [datomic.api :as d]
-            [hopfuse.db-support :as dbsupport]))
+            [hopfuse.api :as api]
+            [hopfuse.users-data :as usersdata]))
 
-(def ^:private user-key-replacements {:db/id          :id
-                                      :user/username  :username
-                                      :user/password  :password
-                                      :user/name      :name
-                                      :user/last-name :last-name
-                                      :user/role      :role})
+(castra/defrpc remove-user! [id]
+               {:rpc/pre [(api/logged-in? :role/admin)]}
+               (let [tx-report (usersdata/remove-user! id)
+                     user (usersdata/find-by-id (:db-before tx-report) id)]
+                 (api/get-state-with-info-message (:db-after tx-report)
+                                              "User '" (:name user) "' removed!")))
 
-
-(defn- prepare-user-entity [m]
-  (dbsupport/rename-selected-keys m user-key-replacements))
-
-(defn remove-user! [id]
-  @(d/transact dbsupport/conn [[:db.fn/retractEntity id]]))
-
-(defn update-user! [user]
-  @(d/transact dbsupport/conn [{:db/id              (:id user)
-                                :user/name          (:name user)
-                                :user/last-name     (:last-name user)
-                                :user/role          (:role user)}]))
-
-(defn find-by-id [db id]
-  (prepare-user-entity (d/entity db id)))
-
-(defn find-by-username [db username]
-  (prepare-user-entity (d/entity db [:user/username username])))
-
-(defn find-all [db]
-  (map (comp prepare-user-entity (dbsupport/reify-entity-from-id-tuple db))
-          (d/q '[:find ?eid
-                 :where [?eid :user/username]]
-               db)))
+(castra/defrpc update-user! [user]
+               ;(Thread/sleep 2000)
+               {:rpc/pre [(api/logged-in?)]}
+               (let [tx-report (usersdata/update-user! user)]
+                 (api/get-state-with-info-message (:db-after tx-report)
+                                              "User '" (:name user) "' updated!")))

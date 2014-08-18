@@ -1,13 +1,19 @@
 (ns hopfuse.api
   (:require [tailrecursion.castra :as castra]
-            [hopfuse.users :as users]
-            [hopfuse.db-support :as dbsupport]))
+            [hopfuse.db-support :as dbsupport]
+            [hopfuse.users-data :as usersdata]))
 
 (defn get-logged-user-from-session []
   (:logged-user @castra/*session*))
 
 (defn store-logged-user-in-session! [user]
-  (swap! castra/*session* #(assoc % :logged-user user)))
+  (swap! castra/*session* assoc :logged-user user))
+
+(defn logged-in?
+  ([]
+   (get-logged-user-from-session))
+  ([& roles]
+   (contains? (apply hash-set roles) (:role (get-logged-user-from-session)))))
 
 (castra/defrpc get-state
                ([]
@@ -15,15 +21,14 @@
                ([db]
                  (when-let [logged-user (get-logged-user-from-session)]
                   {:logged-user logged-user
-                   :users       (users/find-all db)})))
+                   :users       (usersdata/find-all db)})))
 
-(defn get-state-with-info-message [db & msg]
-  (assoc (get-state db) :info-message (apply str msg)))
+(defn get-state-with-info-message [db & message-parts]
+  (assoc (get-state db) :info-message (apply str message-parts)))
 
 (castra/defrpc login! [username password]
-               (Thread/sleep 2000)
                (let [db (dbsupport/get-last-db)
-                     user (users/find-by-username db username)]
+                     user (usersdata/find-by-username db username)]
                  (if (and user (= (:password user) password))
                      (store-logged-user-in-session! user)
                      (throw (castra/ex castra/auth "Username or password incorrect" {:some "data"})))
@@ -32,16 +37,3 @@
 (castra/defrpc logout! []
                (store-logged-user-in-session! nil)
                (get-state))
-
-(castra/defrpc remove-user! [id]
-               (Thread/sleep 2000)
-               (let [tx-report (users/remove-user! id)
-                     user (users/find-by-id (:db-before tx-report) id)]
-                 (get-state-with-info-message (:db-after tx-report)
-                                              "User '" (:name user) "' removed!")))
-
-(castra/defrpc update-user! [user]
-               (Thread/sleep 2000)
-               (let [tx-report (users/update-user! user)]
-                 (get-state-with-info-message (:db-after tx-report)
-                                              "User '" (:name user) "' updated!")))
