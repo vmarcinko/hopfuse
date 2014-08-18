@@ -23,14 +23,14 @@
                                 :user/last-name     (:last-name user)
                                 :user/role          (:role user)}]))
 
-(defn find-by-username [username]
-  (prepare-user-entity (d/entity (dbsupport/get-last-db) [:user/username username])))
+(defn find-by-id [db id]
+  (prepare-user-entity (d/entity db id)))
 
-(defn find-all
-  ([]
-   (find-all (dbsupport/get-last-db)))
-  ([db]
-   (map (comp prepare-user-entity (dbsupport/reify-entity-from-id-tuple db))
-        (d/q '[:find ?eid
-               :where [?eid :user/username]]
-             db))))
+(defn find-by-username [db username]
+  (prepare-user-entity (d/entity db [:user/username username])))
+
+(defn find-all [db]
+  (map (comp prepare-user-entity (dbsupport/reify-entity-from-id-tuple db))
+          (d/q '[:find ?eid
+                 :where [?eid :user/username]]
+               db)))

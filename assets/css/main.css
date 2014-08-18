@@ -1,0 +1,12 @@
+#loading {
+  display:      none;
+  position:     fixed;
+  z-index:      99999;
+  left:         50%;
+  margin-left:  -50px;
+  width:        100px;
+  padding:      10px;
+  text-align:   center;
+  color:        white;
+  background:   orange;
+  font-weight:  bold; }

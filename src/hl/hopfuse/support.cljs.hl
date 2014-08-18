@@ -27,11 +27,9 @@
                                     :alert-danger  false})
 
 (defelem alert [{:keys [type] :as attr} kids]
-         (let [style-cell (cell= (str "alert-" (name (or type :success))))
-               class-cell (cell= (assoc alert-class-default style-cell true))]
-           ((div :role "alert" :class class-cell)
-            (dissoc attr :type)
-            kids)))
+         (let [class-cell (cell= (let [style (str "alert-" (name (or type :success)))]
+                                   (assoc alert-class-default style true)))]
+           ((div :class class-cell) (dissoc attr :type) kids)))
 
 (defelem dismissible-alert [{:keys [type message close-cell] :as attr} _]
          ((alert :toggle (cell= (not (nil? type)))
@@ -40,21 +38,20 @@
                  (close-button :click #(reset! close-cell nil)))
           (dissoc attr :type :message :close-cell)))
 
-(defn assoc-handler [cell key]
+(defn assoc-handler [cell & key]
       (fn [event]
-          (swap! cell assoc key @event)))
+          (swap! cell assoc-in key @event)))
 
 
-(defmethod do! :toggle-modal
-  [elem _ v]
-  (.modal (js/jQuery elem) (if v "show" "hide")))
+;; Modal dialog support
+;; doesn't work properly though
 
 (defelem modal [attr kids]
          (with-let [elem ((div :class "modal"
                                (div :class "modal-dialog"
                                     ((div :class "modal-content") kids))) attr)]
                    (with-init!
-                     (.modal (js/jQuery elem) (clj->js {:show false :backdrop "static"})))))
+                     (.modal (js/jQuery elem) (clj->js {:show false :backdrop false}))))) ;; this doesn't work for some reason
 
 (defelem modal-header [attr kids]
          ((div :class "modal-header") attr kids))
@@ -64,3 +61,7 @@
 
 (defelem modal-footer [attr kids]
          ((div :class "modal-footer") attr kids))
+
+(defmethod do! :toggle-modal
+  [elem _ v]
+  (.modal (js/jQuery elem) (if v "show" "hide")))

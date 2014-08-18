@@ -15,18 +15,17 @@
 
 (defc login-data {})
 
-(defc update-user nil)
+(add-watch rpc/state :info-message-timeout-trigger
+           (fn [_ _ old-value new-value]
+             (when (and (:info-message new-value)
+                        (not (:info-message old-value)))
+               (timeout #(swap! rpc/state dissoc :info-message) 2000))))
 
-(defc info-message nil)
-
-(defn show-info [& message]
-  (reset! info-message (apply str message))
-  (with-timeout
-    2000
-    (reset! info-message nil)))
+;(defc update-user nil)
 
 (html
   (head
+    (link :href "css/main.css" :rel "stylesheet" :type "text/css")
     (link :href "css/bootstrap.min.css" :rel "stylesheet" :type "text/css")
     (link :href "css/bootstrap-theme.min.css" :rel "stylesheet" :type "text/css"))
   (body
@@ -34,39 +33,48 @@
     (container
 
       (support/cell-inspector
-        (text "Update user: ~{update-user}")
         (text "Login data: ~{login-data}")
         (text "State cell: ~{rpc/state}")
         (text "Error cell: ~{(pr-str rpc/error)}")
         (text "Loading cell: ~{rpc/loading}"))
 
-      (support/modal :toggle-modal update-user
-        (support/modal-header
-          (support/close-button :click #(reset! update-user nil))
-          "Updating user ...")
-        (support/modal-body
-          (form-horizontal
-            ;:submit #(rpc/update-user! @update-user)
-            (form-group
-              (control-label :col {:sm 2} :for "inputName" "Name")
-              (div :col {:sm 5}
-                   (input :type "text" :class "form-control" :id "inputName" :placeholder "Type here" :value (cell= (:name update-user)))))
-            (form-group
-              (control-label :col {:sm 2} :for "inputLastName" "Last Name")
-              (div :col {:sm 5}
-                   (input :type "text" :class "form-control" :id "inputLastName" :placeholder "Type here" :value (cell= (:last-name update-user)))))
-            ))
-        (support/modal-footer
-          (button :type "button" :class "btn btn-default" :click #(reset! update-user nil) "Close")
-          (button :type "button" :class "btn btn-default" :click #(rpc/update-user! @update-user) "Submit")))
+
+      ;(support/modal :toggle-modal update-user
+      ;  (support/modal-header
+      ;    (support/close-button :click #(reset! update-user nil))
+      ;    (h4 "Updating user ..."))
+      ;  (support/modal-body
+      ;    (form-horizontal
+      ;      ;:submit #(rpc/update-user! @update-user)
+      ;      (form-group
+      ;        (control-label :col {:sm 2} :for "inputName" "Name")
+      ;        (div :col {:sm 5}
+      ;             (input :type "text" :class "form-control" :id "inputName" :placeholder "Type here"
+      ;                    :value (cell= (:name update-user))
+      ;                    :change (support/assoc-handler update-user :name))))
+      ;      (form-group
+      ;        (control-label :col {:sm 2} :for "inputLastName" "Last Name")
+      ;        (div :col {:sm 5}
+      ;             (input :type "text" :class "form-control" :id "inputLastName" :placeholder "Type here"
+      ;                    :value (cell= (:last-name update-user))
+      ;                    :change (support/assoc-handler update-user :last-name)))))
+      ;    )
+      ;  (support/modal-footer
+      ;            (button :type "button" :class "btn btn-default" :click #(reset! update-user nil) "Close")
+      ;            (button :type "button" :class "btn btn-default"
+      ;                    :click #((rpc/update-user! @update-user)
+      ;                             (show-info "User '" (:username @update-user) "' updated!")
+      ;                             (reset! update-user nil))
+      ;                    "Submit")))
+
+      (div :class "modal" :toggle rpc/loading-in-process?
+        (div :class "modal-dialog"
+             (div :class "modal-content"
+                  (div :class "modal-body" "Please wait ..."))))
 
       (support/alert :type :info
-                     :toggle info-message
-        (text "~{info-message}"))
-
-      (div :class "modal-dialog" :toggle rpc/loading-in-process?
-           (div :class "modal-content"
-                (div :class "modal-body" "Please wait ...")))
+                     :toggle (cell= (:info-message rpc/state))
+                     (text "~{(:info-message rpc/state)}"))
 
       (support/dismissible-alert :type (cell= (when rpc/error :danger))
                                  :message (cell= (:message rpc/error))
@@ -74,8 +82,7 @@
 
       (div :id "logged-off-content" :toggle (cell= (not rpc/logged-in?))
 
-           (form :role "form"
-                 :submit #(let [login-data-value @login-data]
+           (form :submit #(let [login-data-value @login-data]
                            (rpc/login! (:username login-data-value) (:password login-data-value)))
                  (h2 "Please log in")
                  (input :id "inputUsername" :type "text" :class "form-control" :placeholder "Username" :autofocus true
@@ -91,22 +98,6 @@
 
                  (button :class "btn btn-lg btn-primary btn-block" :type "submit" "Log In"))
            )
-
-      ;(div :id "logged-off-content" :class "panel panel-default" :toggle (cell= (not rpc/logged-in?))
-      ;     (div :class "panel-body"
-      ;          (form-horizontal
-      ;            :submit #(rpc/login! (val-id "inputUsername") (val-id "inputPassword"))
-      ;            (form-group
-      ;              (control-label :col {:sm 2} :for "inputUsername" "Username")
-      ;              (div :col {:sm 5}
-      ;                   (input :type "text" :class "form-control" :id "inputUsername" :placeholder "Type here")))
-      ;            (form-group
-      ;              (control-label :col {:sm 2} :for "inputPassword" "Password")
-      ;              (div :col {:sm 5}
-      ;                   (input :type "password" :class "form-control" :id "inputPassword" :placeholder "Type here")))
-      ;            (form-group
-      ;              (div :col {:sm 5} :offset {:sm 2}
-      ;                   (button :type "submit" :class "btn btn-default" "Sign In"))))))
 
       (div :id "logged-in-content" :toggle rpc/logged-in?
 
@@ -139,13 +130,13 @@
                                                                   " (some company)"))))
                                                  (td
                                                    (a :href "javascript:void(0)"
-                                                      :click #(reset! update-user @user)
+                                                      :click #(rpc/update-user! @user)
+                                                      ;:click #(reset! update-user @user)
                                                       "Update"))
                                                  (td
                                                    (a :href "javascript:void(0)"
-                                                      :click #((rpc/remove-user! (:id @user))
-                                                               (show-info "User '" (:username @user) "' removed!"))
-                                                      "Delete")))))))
+                                                      :click #(rpc/remove-user! (:id @user))
+                                                      "Remove")))))))
 
                        (tab :name "Companies"
                             (h4 "Companies")))))))))
