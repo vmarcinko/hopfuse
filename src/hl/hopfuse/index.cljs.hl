@@ -3,7 +3,8 @@
        [tailrecursion.hoplon.reload :refer [reload-all]]
        [hopfuse.bootstrap-support :refer [container control-label form-group form-horizontal tabs tab]]
        [hopfuse.rpc :as rpc]
-       [hopfuse.support :as support]))
+       [hopfuse.support :as support]
+       [goog.i18n.DateTimeFormat]))
 
 (reload-all)
 
@@ -21,7 +22,10 @@
                         (not (:info-message old-value)))
                (timeout #(swap! rpc/state dissoc :info-message) 2000))))
 
-;(defc update-user nil)
+(defc add-user nil)
+(defc update-user nil)
+(defc= view-all-users-shown? (not (or add-user update-user)))
+
 
 (html
   (head
@@ -33,39 +37,41 @@
     (container
 
       (support/cell-inspector
+        (text "Add user: ~{add-user}")
         (text "Login data: ~{login-data}")
         (text "State cell: ~{rpc/state}")
         (text "Error cell: ~{(pr-str rpc/error)}")
         (text "Loading cell: ~{rpc/loading}"))
 
 
-      ;(support/modal :toggle-modal update-user
-      ;  (support/modal-header
-      ;    (support/close-button :click #(reset! update-user nil))
-      ;    (h4 "Updating user ..."))
-      ;  (support/modal-body
-      ;    (form-horizontal
-      ;      ;:submit #(rpc/update-user! @update-user)
-      ;      (form-group
-      ;        (control-label :col {:sm 2} :for "inputName" "Name")
-      ;        (div :col {:sm 5}
-      ;             (input :type "text" :class "form-control" :id "inputName" :placeholder "Type here"
-      ;                    :value (cell= (:first-name update-user))
-      ;                    :change (support/assoc-handler update-user :name))))
-      ;      (form-group
-      ;        (control-label :col {:sm 2} :for "inputLastName" "Last Name")
-      ;        (div :col {:sm 5}
-      ;             (input :type "text" :class "form-control" :id "inputLastName" :placeholder "Type here"
-      ;                    :value (cell= (:last-name update-user))
-      ;                    :change (support/assoc-handler update-user :last-name)))))
-      ;    )
-      ;  (support/modal-footer
-      ;            (button :type "button" :class "btn btn-default" :click #(reset! update-user nil) "Close")
-      ;            (button :type "button" :class "btn btn-default"
-      ;                    :click #((rpc/update-user! @update-user)
-      ;                             (show-info "User '" (:username @update-user) "' updated!")
-      ;                             (reset! update-user nil))
-      ;                    "Submit")))
+      #_(support/modal :toggle-modal update-user
+        (support/modal-header
+          (support/close-button :click #(reset! update-user nil))
+          (h4 "Updating user ..."))
+        (support/modal-body
+          (form-horizontal
+            ;:submit #(rpc/update-user! @update-user)
+            (form-group
+              (control-label :col {:sm 2} :for "firstNameInput" "Name")
+              (div :col {:sm 5}
+                   (input :type "text" :class "form-control" :id "firstNameInput" :placeholder "Type here"
+                          :value (cell= (:first-name update-user))
+                          :change (support/assoc-handler update-user :name))))
+            (form-group
+              (control-label :col {:sm 2} :for "lastNameInput" "Last Name")
+              (div :col {:sm 5}
+                   (input :type "text" :class "form-control" :id "lastNameInput" :placeholder "Type here"
+                          :value (cell= (:last-name update-user))
+                          :change (support/assoc-handler update-user :last-name)))))
+          )
+        (support/modal-footer
+                  (button :type "button" :class "btn btn-default" :click #(reset! update-user nil) "Close")
+                  (button :type "button" :class "btn btn-default"
+                          :click #((rpc/update-user! @update-user)
+                                   (show-info "User '" (:username @update-user) "' updated!")
+                                   (reset! update-user nil))
+                          "Submit")))
+
 
       (div :class "modal" :toggle rpc/loading-in-process?
         (div :class "modal-dialog"
@@ -111,40 +117,84 @@
 
                      (tabs
                        (tab :name "Users"
-                            (table :class "table table-condensed"
-                                   (thead
-                                     (tr
-                                       (th "Username")
-                                       (th "First Name")
-                                       (th "Last Name")
-                                       (th "Role")))
-                                   (tbody
-                                     (loop-tpl :bindings [user (cell= (:users rpc/state))]
-                                               (tr
-                                                 (td (text (:username user)))
-                                                 (td (text (:first-name user)))
-                                                 (td (text (:last-name user)))
-                                                 (td (text (str (when-let [role (:role user)]
-                                                                  (name role))
-                                                                (when (= :company (:role user))
-                                                                  " (some company)"))))
-                                                 (td
-                                                   (a :href "javascript:void(0)"
-                                                      :click #(rpc/update-user! @user)
-                                                      ;:click #(reset! update-user @user)
-                                                      "Update"))
-                                                 (td
-                                                   (a :href "javascript:void(0)"
-                                                      :click #(rpc/remove-user! (:id @user))
-                                                      "Remove"))))))
 
-                            (a :href "javascript:void(0)"
-                               :click #(rpc/add-user! {:username   "han"
-                                                       :password   "han"
-                                                       :first-name "Han"
-                                                       :last-name  "Solo"
-                                                       :role       :role/company})
-                               "Add")
+                            (div :toggle view-all-users-shown?
+                                 (table :class "table table-condensed"
+                                        (thead
+                                          (tr
+                                            (th "Username")
+                                            (th "First Name")
+                                            (th "Last Name")
+                                            (th "Role")
+                                            (th "Creation Time")
+                                            ))
+                                        (tbody
+                                          (loop-tpl :bindings [user (cell= (:users rpc/state))]
+                                                    (tr
+                                                      (td (text (:username user)))
+                                                      (td (text (:first-name user)))
+                                                      (td (text (:last-name user)))
+                                                      (td (text (str (when-let [role (:role user)]
+                                                                       (name role))
+                                                                     (when (= :company (:role user))
+                                                                       " (some company)"))))
+                                                      (td (text (support/format-date-time (:creation-time user))))
+                                                      (td
+                                                        (a :href "javascript:void(0)"
+                                                           :click #(rpc/update-user! @user)
+                                                           ;:click #(reset! update-user @user)
+                                                           "Update"))
+                                                      (td
+                                                        (a :href "javascript:void(0)"
+                                                           :click #(rpc/remove-user! (:id @user))
+                                                           "Remove"))))))
+                                 (a :href "javascript:void(0)"
+                                    :click #(reset! add-user {})
+                                    "Add"))
+                            
+                            (div :toggle add-user
+
+                                 (form-horizontal
+                                   :submit #(rpc/add-user! @add-user)
+                                   (form-group
+                                     (control-label :col {:sm 2} :for "usernameInput" "Username")
+                                     (div :col {:sm 5}
+                                          (input :type "text" :class "form-control" :id "usernameInput" :placeholder "Type here"
+                                                 :value (cell= (:username add-user))
+                                                 :change (support/assoc-handler add-user :username))))
+                                   (form-group
+                                     (control-label :col {:sm 2} :for "passwordInput" "Password")
+                                     (div :col {:sm 5}
+                                          (input :type "password" :class "form-control" :id "passwordInput" :placeholder "Type here"
+                                                 :value (cell= (:password add-user))
+                                                 :change (support/assoc-handler add-user :password))))
+                                   (form-group
+                                     (control-label :col {:sm 2} :for "firstNameInput" "First Name")
+                                     (div :col {:sm 5}
+                                          (input :type "text" :class "form-control" :id "firstNameInput" :placeholder "Type here"
+                                                 :value (cell= (:first-name add-user))
+                                                 :change (support/assoc-handler add-user :first-name))))
+                                   (form-group
+                                     (control-label :col {:sm 2} :for "lastNameInput" "Last Name")
+                                     (div :col {:sm 5}
+                                          (input :type "text" :class "form-control" :id "lastNameInput" :placeholder "Type here"
+                                                 :value (cell= (:last-name add-user))
+                                                 :change (support/assoc-handler add-user :last-name))))
+
+                                   (form-group
+                                     (control-label :col {:sm 2} :for "roleInput" "Role")
+                                     (div :col {:sm 5}
+                                          (select :class "form-control" :id "roleInput"
+                                                  :value (cell= (:role add-user))
+                                                  :change (support/assoc-handler add-user :role)
+                                                  (option ":role/admin")
+                                                  (option ":role/company"))
+                                          ))
+
+                                   (button :type "submit" :class "btn btn-default" "Submit")
+                                   (button :type "button" :class "btn btn-default" :click #(reset! add-user nil) "Cancel"))
+                                 )
+
                             )
 
                        (tab :name "Companies"

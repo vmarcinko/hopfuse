@@ -12,18 +12,19 @@
                  (api/get-state-with-info-message (:db-after tx-report)
                                                   "User '" (:username user) "' removed!")))
 
-(castra/defrpc add-user! [user]
+(castra/defrpc add-user! [add-data]
                {:rpc/pre [(api/logged-in? :role/admin)]}
-               (if (usersdata/find-by-username (dbsupport/get-last-db) (:username user))
+               ;; maybe to use datomic tx functions here for validation?
+               (if (usersdata/find-by-username (dbsupport/get-last-db) (:username add-data))
                  (throw (castra/ex castra/error "Username reserved"))
-                 (let [new-user (assoc user :creation-time (java.util.Date.))
+                 (let [new-user (assoc add-data :creation-time (java.util.Date.))
                       tx-report (usersdata/add-user! new-user)]
                   (api/get-state-with-info-message (:db-after tx-report)
                                                    "User '" (:username new-user) "' added!"))))
 
-(castra/defrpc update-user! [user]
+(castra/defrpc update-user! [update-data]
                ;(Thread/sleep 2000)
                {:rpc/pre [(api/logged-in? :role/admin)]}
-               (let [tx-report (usersdata/update-user! user)]
+               (let [tx-report (usersdata/update-user! update-data)]
                  (api/get-state-with-info-message (:db-after tx-report)
-                                                  "User '" (:username user) "' updated!")))
+                                                  "User '" (:username update-data) "' updated!")))

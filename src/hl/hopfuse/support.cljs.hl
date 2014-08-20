@@ -65,3 +65,7 @@
 (defmethod do! :toggle-modal
   [elem _ v]
   (.modal (js/jQuery elem) (if v "show" "hide")))
+
+(defn format-date-time [date-time]
+  (when date-time
+      (.format (goog.i18n.DateTimeFormat. "yyyy/MM/dd HH:mm:ss") date-time)))
