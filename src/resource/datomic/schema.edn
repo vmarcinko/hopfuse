@@ -16,7 +16,7 @@
      :db/ident              :user/username
      :db/valueType          :db.type/string
      :db/cardinality        :db.cardinality/one
-     :db/unique             :db.unique/identity
+     :db/unique             :db.unique/value
      :db/doc                "An user's username"
      :db.install/_attribute :db.part/db}
 
@@ -28,7 +28,7 @@
      :db.install/_attribute :db.part/db}
 
     {:db/id                 #db/id[:db.part/db]
-     :db/ident              :user/name
+     :db/ident              :user/first-name
      :db/valueType          :db.type/string
      :db/cardinality        :db.cardinality/one
      :db/doc                "An user's name"
@@ -59,7 +59,7 @@
      :user/creation-time #inst "2013-06-08T01:00:00Z"
      :user/username      "pero"
      :user/password      "pero"
-     :user/name          "Pero"
+     :user/first-name          "Pero"
      :user/last-name     "Perić"
      :user/role          :role/admin
      }
@@ -67,7 +67,7 @@
      :user/creation-time #inst "2013-06-09T01:00:00Z"
      :user/username      "john"
      :user/password      "doe"
-     :user/name          "John"
+     :user/first-name    "John"
      :user/last-name     "Doe"
      :user/role          :role/company
      }

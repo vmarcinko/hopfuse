@@ -11,7 +11,7 @@
 
 (defc= logged-user-title
        (let [logged-user (:logged-user rpc/state)]
-         (str (:name logged-user) " " (:last-name logged-user))))
+         (str (:first-name logged-user) " " (:last-name logged-user))))
 
 (defc login-data {})
 
@@ -50,7 +50,7 @@
       ;        (control-label :col {:sm 2} :for "inputName" "Name")
       ;        (div :col {:sm 5}
       ;             (input :type "text" :class "form-control" :id "inputName" :placeholder "Type here"
-      ;                    :value (cell= (:name update-user))
+      ;                    :value (cell= (:first-name update-user))
       ;                    :change (support/assoc-handler update-user :name))))
       ;      (form-group
       ;        (control-label :col {:sm 2} :for "inputLastName" "Last Name")
@@ -115,14 +115,14 @@
                                    (thead
                                      (tr
                                        (th "Username")
-                                       (th "Name")
+                                       (th "First Name")
                                        (th "Last Name")
                                        (th "Role")))
                                    (tbody
                                      (loop-tpl :bindings [user (cell= (:users rpc/state))]
                                                (tr
                                                  (td (text (:username user)))
-                                                 (td (text (:name user)))
+                                                 (td (text (:first-name user)))
                                                  (td (text (:last-name user)))
                                                  (td (text (str (when-let [role (:role user)]
                                                                   (name role))
@@ -136,7 +136,16 @@
                                                  (td
                                                    (a :href "javascript:void(0)"
                                                       :click #(rpc/remove-user! (:id @user))
-                                                      "Remove")))))))
+                                                      "Remove"))))))
+
+                            (a :href "javascript:void(0)"
+                               :click #(rpc/add-user! {:username   "han"
+                                                       :password   "han"
+                                                       :first-name "Han"
+                                                       :last-name  "Solo"
+                                                       :role       :role/company})
+                               "Add")
+                            )
 
                        (tab :name "Companies"
                             (h4 "Companies")))))))))

@@ -5,7 +5,7 @@
 (boot/deftask nrepl
   "Runs an nrepl server."
   [& [{:keys [port] :or {port 0}}]]
-	(boot/set-env! :dependencies '[[org.clojure/tools.nrepl "0.2.3"]])
+	(boot/set-env! :dependencies '[[org.clojure/tools.nrepl "0.2.4"]])
 	(require '[clojure.tools.nrepl.server :refer [start-server]])
 	(let [server ((resolve 'start-server) :port port)]
 	;      (let [server (start-server :port port)]

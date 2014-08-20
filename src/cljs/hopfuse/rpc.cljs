@@ -19,6 +19,7 @@
 (def login! (mkremote 'hopfuse.api/login! state error loading))
 (def logout! (mkremote 'hopfuse.api/logout! state error loading))
 (def remove-user! (mkremote 'hopfuse.users/remove-user! state error loading))
+(def add-user! (mkremote 'hopfuse.users/add-user! state error loading))
 (def update-user! (mkremote 'hopfuse.users/update-user! state error loading))
 
 (defn init []

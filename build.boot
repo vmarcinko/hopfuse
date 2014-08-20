@@ -21,9 +21,13 @@
 (deftask development
   "Build hopfuse for development."
   []
-  (comp (my/nrepl {:port 33133}) (watch) (hoplon {:prerender false}) (c/castra-dev-server '[hopfuse.api hopfuse.users])))
+  (comp (my/nrepl {:port 33133})
+        (watch)
+        (hoplon {:prerender false})
+        (c/castra-dev-server '[hopfuse.api
+                               hopfuse.users])))
 
 (deftask production
-  "Build hopfuse for production."
-  []
-  (hoplon {:optimizations :advanced}))
+         "Build hopfuse for production."
+         []
+         (hoplon {:optimizations :advanced}))
