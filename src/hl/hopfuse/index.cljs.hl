@@ -16,11 +16,14 @@
 
 (defc login-data {})
 
-(add-watch rpc/state :info-message-timeout-trigger
-           (fn [_ _ old-value new-value]
-             (when (and (:info-message new-value)
-                        (not (:info-message old-value)))
-               (timeout #(swap! rpc/state dissoc :info-message) 2000))))
+(defc info-message nil)
+(defn show-info [& msg]
+  (reset! info-message (apply str msg))
+  (timeout #(reset! info-message nil) 2000))
+
+(defn show-info-handler [& msg]
+  (fn []
+    (apply show-info msg)))
 
 (defc add-user nil)
 (defc update-user nil)
@@ -79,8 +82,8 @@
                   (div :class "modal-body" "Please wait ..."))))
 
       (support/alert :type :info
-                     :toggle (cell= (:info-message rpc/state))
-                     (text "~{(:info-message rpc/state)}"))
+                     :toggle info-message
+                     (text "~{info-message}"))
 
       (support/dismissible-alert :type (cell= (when rpc/error :danger))
                                  :message (cell= (:message rpc/error))
@@ -89,7 +92,7 @@
       (div :id "logged-off-content" :toggle (cell= (not rpc/logged-in?))
 
            (form :submit #(let [login-data-value @login-data]
-                           (rpc/login! (:username login-data-value) (:password login-data-value)))
+                           (rpc/login! [(:username login-data-value) (:password login-data-value)]))
                  (h2 "Please log in")
                  (input :id "inputUsername" :type "text" :class "form-control" :placeholder "Username" :autofocus true
                         :change (support/assoc-handler login-data :username))
@@ -110,7 +113,7 @@
            (div :class "panel panel-default"
                 (div :class "panel-body"
                      "You are logged in as " (strong (text "~{logged-user-title}"))
-                     (button :type "button" :class "btn btn-lg btn-primary" :click #(rpc/logout!) "Log Out")))
+                     (button :type "button" :class "btn btn-lg btn-primary" :click #(rpc/logout! []) "Log Out")))
 
            (div :class "panel panel-default"
                 (div :class "panel-body"
@@ -141,12 +144,14 @@
                                                       (td (text (support/format-date-time (:creation-time user))))
                                                       (td
                                                         (a :href "javascript:void(0)"
-                                                           :click #(rpc/update-user! @user)
+                                                           :click #(rpc/update-user! [@user]
+                                                                                     :success (show-info-handler "User '" (:username @user) " updated!"))
                                                            ;:click #(reset! update-user @user)
                                                            "Update"))
                                                       (td
                                                         (a :href "javascript:void(0)"
-                                                           :click #(rpc/remove-user! (:id @user))
+                                                           :click #(rpc/remove-user! [(:id @user)]
+                                                                                     :success (show-info-handler "User '" (:username @user) " removed!"))
                                                            "Remove"))))))
                                  (a :href "javascript:void(0)"
                                     :click #(reset! add-user {})
@@ -155,7 +160,10 @@
                             (div :toggle add-user
 
                                  (form-horizontal
-                                   :submit #(rpc/add-user! @add-user)
+                                   :submit #(rpc/add-user! [@add-user]
+                                                           :success (fn []
+                                                                      (show-info "User '" (:username @add-user) " added!")
+                                                                      (reset! add-user nil)))
                                    (form-group
                                      (control-label :col {:sm 2} :for "usernameInput" "Username")
                                      (div :col {:sm 5}

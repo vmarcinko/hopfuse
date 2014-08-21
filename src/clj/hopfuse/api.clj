@@ -23,9 +23,6 @@
                   {:logged-user logged-user
                    :users       (usersdata/find-all db)})))
 
-(defn get-state-with-info-message [db & message-parts]
-  (assoc (get-state db) :info-message (apply str message-parts)))
-
 (castra/defrpc login! [username password]
                (let [db (dbsupport/get-last-db)
                      user (usersdata/find-by-username db username)]

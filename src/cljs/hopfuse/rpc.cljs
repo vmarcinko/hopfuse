@@ -3,7 +3,7 @@
     [tailrecursion.javelin :refer [defc defc= cell=]])
   (:require
    [tailrecursion.javelin]
-   [tailrecursion.castra :refer [mkremote]]))
+   [hopfuse.castra-support :refer [mkremote]]))
 
 (defn log-to-console [& message-parts]
       (.log js/console (apply str message-parts)))
